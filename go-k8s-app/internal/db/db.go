@@ -1,8 +1,11 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	_ "github.com/glebarez/go-sqlite" // SQLite driver
 	_ "github.com/lib/pq"             // PostgreSQL driver
 	"log"
@@ -36,16 +39,30 @@ func InitDB() (DB, error) {
 func initPostgresDB() (DB, error) {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
 	dbName := os.Getenv("DB_NAME")
-	dbSSLMode := os.Getenv("DB_SSLMODE")
+	dbUser := os.Getenv("DB_USER")
 
-	// Build PostgreSQL connection string
-	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbName, dbSSLMode)
+	var err error
+	// Create Default Azure Identity credential to retrieve the token
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not get Azure credentials: %w", err)
+	}
+
+	// Get an access token for PostgreSQL
+	var tokenRequestOptions policy.TokenRequestOptions = policy.TokenRequestOptions{
+		Scopes: []string{"https://ossrdbms-aad.database.windows.net/.default"},
+	}
+	token, err := cred.GetToken(context.Background(), tokenRequestOptions)
+	if err != nil {
+		return nil, fmt.Errorf("could not get access token: %w", err)
+	}
+
+	// Set up the PostgreSQL connection string with the Azure AD token
+	connStr := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=require user=%s password=%s", dbHost, dbPort, dbName, dbUser, token.Token)
 
 	// Open connection to the database
-	var err error
-	db, err = sql.Open("postgres", dsn)
+	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to the database: %w", err)
 	}
@@ -63,8 +80,8 @@ func initPostgresDB() (DB, error) {
 func initSQLiteDB() (DB, error) {
 	dbPath := os.Getenv("DB_PATH") // Local SQLite file path
 
-	// Open connection to SQLite
 	var err error
+	// Open connection to SQLite
 	db, err = sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to SQLite: %w", err)
