@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #messages {
+            margin-top: 20px;
+        }
+        .message {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Message App</h1>
+
+    <form id="messageForm">
+        <label for="message">Enter your message:</label><br>
+        <textarea id="message" name="message" rows="4" cols="50"></textarea><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Shared Messages</h2>
+    <div id="messages"></div>
+
+    <script>
+        // Function to submit the message
+        document.getElementById("messageForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const message = document.getElementById("message").value;
+
+            fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById("message").value = ''; // Clear the input
+                    loadMessages(); // Reload the messages
+                } else {
+                    alert("Failed to submit message");
+                }
+            })
+            .catch(error => {
+                console.error("Error submitting message:", error);
+            });
+        });
+
+        // Function to load messages
+        function loadMessages() {
+            fetch('/messages')
+            .then(response => response.json())
+            .then(messages => {
+                const messagesDiv = document.getElementById("messages");
+                messagesDiv.innerHTML = ''; // Clear current messages
+
+                messages.forEach((message, index) => {
+                    const messageElement = document.createElement("div");
+                    messageElement.className = "message";
+                    messageElement.innerHTML = `<strong>Message ${index + 1}:</strong> ${message}`;
+                    messagesDiv.appendChild(messageElement);
+                });
+            })
+            .catch(error => {
+                console.error("Error loading messages:", error);
+            });
+        }
+
+        // Load messages when the page loads
+        window.onload = function() {
+            loadMessages();
+        };
+    </script>
+
+</body>
+</html>
