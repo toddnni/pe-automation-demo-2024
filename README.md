@@ -86,7 +86,7 @@ Deploy the Platform stack like this
         --set azureTenantID=$TENANT \
         --set azureClientID=$USER_ASSIGNED_CLIENT_ID \
         --set useWorkloadIdentityAuth=true \
-        --set crdPattern='resources.azure.com/*;dbforpostgresql.azure.com/*;managedidentity.azure.com/*'
+        --set crdPattern='resources.azure.com/*;dbforpostgresql.azure.com/*;managedidentity.azure.com/*;documentdb.azure.com/*'
 
     # Shell operator
 
