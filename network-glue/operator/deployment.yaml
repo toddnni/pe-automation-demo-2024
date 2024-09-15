@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shell-operator
+  labels:
+    app: shell-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shell-operator
+  template:
+    metadata:
+      labels:
+        app: shell-operator
+    spec:
+      serviceAccountName: shell-operator
+      containers:
+        - name: shell-operator
+          image: ghcr.io/flant/shell-operator:latest
+        env:
+        - name: GIT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: git-token
+              key: GIT_TOKEN
+        volumeMounts:
+        - name: hooks
+          mountPath: /hooks
+      volumes:
+      - name: hooks
+        configMap:
+          name: shell-hooks
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shell-hooks
+data:
+  10-create-pr.sh: |
+    #!/bin/bash
+    /path/to/create-pr.sh
+  config.yaml: |
+    configVersion: "v1"
+    onStartup:
+    - hook: 10-create-pr.sh

@@ -1,0 +1,78 @@
+Platform Engineering with Kubernetes Automation Demo 2024
+=============================================
+
+The idea is to demonstrate how you can use Kubernetes concepts to automate application infrastructure delivery.
+
+Features
+
+- ASO, Azure Service Operator https://github.com/Azure/azure-service-operator
+- Crossplane https://github.com/crossplane/crossplane
+- Shell-operator https://github.com/flant/shell-operator
+
+The demo is insecure and do not use this as baseline. Public clusters etc.
+
+Try out
+======
+
+Prerequisites
+-------
+
+
+Demo
+----
+
+Start AKS cluster like this
+
+
+Deploy the Platform stack like this
+
+
+Adapt the example and deploy the application like this
+
+Devcontainer
+------
+
+There is Devcontainer that contain all the necessary tooling for the demo.
+
+Start it for example with Devpod like this
+
+    
+
+
+
+First, generate a GitHub personal access token (PAT) with minimal permissions for the repository you want to access. Make sure the token has:
+
+- repo scope (to create PRs and push changes to the repo).
+
+Harden the token by:
+
+- Limiting the scope to a specific repository.
+- Restricting access based on IP addresses, if available.
+
+
+User managed identity
+
+az identity create --name myUserManagedIdentity --resource-group myResourceGroup --location eastus
+
+az role assignment create --assignee <clientId-of-UMI> \
+  --role "Azure PostgreSQL Contributor" \
+  --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.DBforPostgreSQL/servers/<server-name>
+
+Pstgre need to use AAD
+
+CREATE ROLE "<clientId-of-UMI>" WITH LOGIN INHERIT;
+GRANT ALL PRIVILEGES ON DATABASE <your_database> TO "<clientId-of-UMI>";
+
+
+Federation of sa
+
+az identity federated-credential create --name myFederatedCredential \
+  --identity-name myUserManagedIdentity --resource-group myResourceGroup \
+  --issuer https://kubernetes.default.svc.cluster.local \
+  --subject system:serviceaccount:<namespace>:my-app-sa \
+  --audience sts.windows.net
+
+
+
+go get github.com/Azure/azure-sdk-for-go/sdk/azidentity
+

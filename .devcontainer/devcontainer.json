@@ -10,7 +10,7 @@
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
 		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
 			"version": "latest",
-			"helm": "none",
+			"helm": "latest",
 			"minikube": "none"
 		},
 		"ghcr.io/devcontainers/features/azure-cli:1": {}
