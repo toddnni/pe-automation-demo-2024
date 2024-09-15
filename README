@@ -17,17 +17,96 @@ Try out
 Prerequisites
 -------
 
+Login and select the subscription
+
+    az login
+    az account list
+
+Some defaults
+
+    export LOCATION=swedencentral
+    export SUBSCRIPTION="$(az account show --query id --output tsv)"
+    export CLUSTER_NAME="myAKSCluster"
+    export RESOURCE_GROUP="myAKSCluster"
+    export ASO_IDENTITY="aso-manager"
+
+We need AKS cluster with workload identity support enabled
+
+    az group create --name "${RESOURCE_GROUP}" --location "${LOCATION}"
+    az aks create --resource-group "${RESOURCE_GROUP}" --name "${CLUSTER_NAME}" \
+        --enable-oidc-issuer \
+        --enable-workload-identity \
+        --network-plugin azure \
+        --network-plugin-mode overlay \
+        --auto-upgrade-channel stable \
+        --node-os-upgrade-channel NodeImage \
+        --node-count 1 \
+        --node-vm-size Standard_DS2_v2 \
+        --generate-ssh-keys
+    az aks get-credentials --resource-group "${RESOURCE_GROUP}" --name "${CLUSTER_NAME}"
+
+Deploy the Platform stack like this
+
+    # Crossplane
+
+    # ASO https://azure.github.io/azure-service-operator/#installation
+    kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.14.1/cert-manager.yaml
+    helm repo add aso2 https://raw.githubusercontent.com/Azure/azure-service-operator/main/v2/charts
+    # ASO identity and credentials
+    export AKS_OIDC_ISSUER="$(az aks show --name "${CLUSTER_NAME}" \
+        --resource-group "${RESOURCE_GROUP}" \
+        --query "oidcIssuerProfile.issuerUrl" \
+        --output tsv)"
+    az identity create \
+        --name "${ASO_IDENTITY}" \
+        --resource-group "${RESOURCE_GROUP}" \
+        --location "${LOCATION}" \
+        --subscription "${SUBSCRIPTION}"
+    export USER_ASSIGNED_CLIENT_ID="$(az identity show \
+        --resource-group "${RESOURCE_GROUP}" \
+        --name "${ASO_IDENTITY}" \
+        --query 'clientId' \
+        --output tsv)"
+    az role assignment create --assignee "${USER_ASSIGNED_CLIENT_ID}" \
+        --role "contributor" \
+        --scope "/subscriptions/${SUBSCRIPTION}"
+    az identity federated-credential create \
+        --name ${ASO_IDENTITY}-federation \
+        --identity-name "${ASO_IDENTITY}" \
+        --resource-group "${RESOURCE_GROUP}" \
+        --issuer "${AKS_OIDC_ISSUER}" \
+        --subject system:serviceaccount:azureserviceoperator-system:azureserviceoperator-default \
+        --audience api://AzureADTokenExchange
+    export TENANT=$(az account show --query tenantId --output tsv)
+    # install
+    helm upgrade --install aso2 aso2/azure-service-operator \
+        --create-namespace \
+        --namespace=azureserviceoperator-system \
+        --set azureSubscriptionID=$SUBSCRIPTION \
+        --set azureTenantID=$TENANT \
+        --set azureClientID=$USER_ASSIGNED_CLIENT_ID \
+        --set useWorkloadIdentityAuth=true \
+        --set crdPattern='resources.azure.com/*;dbforpostgresql.azure.com/*;managedidentity.azure.com/*'
+
+    # Shell operator
+
+
 
 Demo
 ----
 
-Start AKS cluster like this
+Needs a cluster and resources in the prerequisites
 
 
-Deploy the Platform stack like this
 
 
 Adapt the example and deploy the application like this
+
+Cleanup
+------
+
+    az aks delete --name "${CLUSTER_NAME}" --resource-group "${RESOURCE_GROUP}" --yes
+    az group delete --resource-group "${RESOURCE_GROUP}" --yes
 
 Devcontainer
 ------
@@ -36,6 +115,9 @@ There is Devcontainer that contain all the necessary tooling for the demo.
 
 Start it for example with Devpod like this
 
+
+
+-----
     
 
 

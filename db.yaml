@@ -1,0 +1,63 @@
+---
+apiVersion: resources.azure.com/v1api20200601
+kind: ResourceGroup
+metadata:
+  name: appdb-rg
+  namespace: asodemo
+spec:
+  location: swedencentral
+---
+apiVersion: dbforpostgresql.azure.com/v1api20221201
+kind: FlexibleServer
+metadata:
+  name: appdb-server
+  namespace: asodemo
+spec:
+  location: swedencentral
+  owner:
+    name: appdb-rg
+  version: "14"
+  sku:
+    name: Standard_B1ms
+    tier: Burstable
+  authConfig:
+    activeDirectoryAuth: "Enabled"
+    passwordAuth: "Disabled"
+  administratorLogin: myadmin
+  identity:
+    type: UserAssigned
+    userAssignedIdentities:
+    - reference:
+        armId: "/subscriptions/a58e5590-66ba-46a9-952d-51c3415e0574/resourcegroups/myAKSCluster/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aso-manager"
+  #administratorLoginPassword:
+  #  name: postgres-secret
+  #  key: PASSWORD
+  storage:
+    storageSizeGB: 32
+---
+apiVersion: dbforpostgresql.azure.com/v1api20221201
+kind: FlexibleServersDatabase
+metadata:
+  name: appdb-server-db
+  namespace: asodemo
+spec:
+  owner:
+    name: appdb-server
+  charset: utf8
+#---
+#apiVersion: dbforpostgresql.azure.com/v1api20221201
+#kind: FlexibleServersFirewallRule
+#metadata:
+#  name: appdb-allow-all
+#  namespace: asodemo
+#spec:
+#  owner:
+#    name: appdb-server
+#  # The following address range allows anybody to connect to this server.
+#  # This should only be used for demo purposes and not in production!
+#  # There are other ways to control server access which are not covered here, you can see more about it here:
+#  # https://docs.microsoft.com/azure/postgresql/flexible-server/concepts-security#network-security
+#  startIpAddress: 0.0.0.0
+#  endIpAddress: 255.255.255.255
+#---
+#
