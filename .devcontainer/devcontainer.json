@@ -32,7 +32,8 @@
 			"extensions": [
 				"EditorConfig.EditorConfig",
 				"ms-kubernetes-tools.vscode-kubernetes-tools",
-				"mhutchie.git-graph"
+				"mhutchie.git-graph",
+				"hediet.vscode-drawio"
 			]
 		}
 	},
