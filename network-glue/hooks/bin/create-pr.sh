@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Exit on error
 set -e
@@ -31,12 +31,20 @@ git commit -m "$COMMIT_MESSAGE"
 echo "Pushing the changes to the branch $BRANCH_NAME..."
 git push origin "$BRANCH_NAME"
 
+# example https://github.com/toddnni/pe-automation-demo-2024-repo
+REPO_NAME="${REPO_URL##*/}"
+REPO_OWNER="${REPO_URL#*.com/}"
+REPO_OWNER="${REPO_OWNER%%/*}"
+echo "Resolved repo owner and name: $REPO_OWNER, $REPO_NAME"
+
+
 echo "Creating a pull request..."
 curl -X POST \
   -H "Authorization: token ${GITHUB_TOKEN}" \
   -H "Accept: application/vnd.github.v3+json" \
+  --fail
   -d @- \
-  "${GITHUB_API_URL}/repos/${REPO_OWNER}/${REPO_NAME}/pulls" <<EOF
+  "https://github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls" <<EOF
 {
   "title": "${PR_TITLE}",
   "body": "${PR_BODY}",

@@ -33,8 +33,6 @@ spec:
             spec:
               type: object
               properties:
-                networkGitRepo:
-                  type: string
                 source:
                   type: object
                   properties:

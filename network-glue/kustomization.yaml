@@ -1,0 +1,17 @@
+
+resources:
+- crd/network-glue.yaml
+- operator/deployment.yaml
+- operator/role.yaml
+
+configMapGenerator:
+- name: shell-hooks
+  namespace: shell-operator
+  files:
+  - hooks/hook.sh
+  - hooks/bin/clone-repo.sh
+  - hooks/bin/create-pr.sh
+- name: repo-url
+  namespace: shell-operator
+  files:
+  - repo-url

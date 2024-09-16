@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Exit on error
 set -e
@@ -25,3 +25,5 @@ cd "$REPO_DIR"
 # Create a new branch for the changes
 echo "Creating a new branch: $BRANCH_NAME"
 git checkout -b "$BRANCH_NAME"
+
+echo "Repo cloned successfully!"

@@ -2,7 +2,7 @@
 
 set -u
 
-if [[ $1 == "--config" ]] ; then
+if [[ $# -gt 0 ]] && [[ $1 == "--config" ]] ; then
   cat <<EOF
 {
   "configVersion":"v1",
@@ -14,7 +14,7 @@ if [[ $1 == "--config" ]] ; then
 }
 EOF
 else
-  cd "$(dirname $0)"
+  cd "$(dirname $0)"
   # TODO works only for the first object
   type=$(jq -r '.[0].type' "${BINDING_CONTEXT_PATH}")
   namespace=$(jq -r '.[0].object.metadata.namespace' "${BINDING_CONTEXT_PATH}")
@@ -23,24 +23,26 @@ else
   source=$(jq -r '.[0].object.spec.source.networkCIDR' "${BINDING_CONTEXT_PATH}")
   target=$(jq -r '.[0].object.spec.target.networkCIDR' "${BINDING_CONTEXT_PATH}")
   targetPort=$(jq -r '.[0].object.spec.target.port' "${BINDING_CONTEXT_PATH}")
-  REPO_URL="$REPO_URL"
-  REPO_PATH=/git
-  BRANCH_NAME="feature/update-config-$(date +%Y%m%d-%H%M%S)"
-  FILE_TO_UPDATE="/git/$namespace-$name.json"
+
+  export REPO_URL="$REPO_URL"
+  export REPO_DIR=/git
+  export BRANCH_NAME="feature/update-config-$(date +%Y%m%d-%H%M%S)"
+  export FILE_TO_UPDATE="$REPO_DIR/$namespace-$name.json"
 
   if [[ $type == "Synchronization" ]] ; then
     # handle existing objects
+    echo "sync asked"
   fi
 
   if [[ $type == "Event" ]] && ([[ $eventType = "Added" ]] || [[ $eventType = "Updated" ]]) ; then
     echo "${name} object is added or modified"
-    bash clone-repo.sh
-    echo "{ \"source\": \"$source\", \"target\": \"$target\", \"targetPort\": $port }" > "$FILE_TO_UPDATE"
-    bash create-pr.sh
+    bash bin/clone-repo.sh
+    echo "{ \"source\": \"$source\", \"target\": \"$target\", \"targetPort\": \"$targetPort\" }" > "$FILE_TO_UPDATE"
+    bash bin/create-pr.sh
   elif [[ $type == "Event" ]] && [[ $eventType = "Deleted" ]] ; then
     echo "${name} object is deleted"
-    bash clone-repo.sh
-    echo "{ \"source\": \"$source\", \"target\": \"$target\", \"targetPort\": $port }" > "$FILE_TO_UPDATE"
-    bash create-pr.sh
+    bash bin/clone-repo.sh
+    echo "{ \"source\": \"$source\", \"target\": \"$target\", \"targetPort\": \"$targetPort\" }" > "$FILE_TO_UPDATE"
+    bash bin/create-pr.sh
   fi
 fi

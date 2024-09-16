@@ -56,9 +56,10 @@ We need AKS cluster with workload identity support enabled
 
 Deploy the Platform stack like this
 
-    # Crossplane
+Crossplane
 
-    # ASO https://azure.github.io/azure-service-operator/#installation
+ASO https://azure.github.io/azure-service-operator/#installation
+
     kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.14.1/cert-manager.yaml
     helm repo add aso2 https://raw.githubusercontent.com/Azure/azure-service-operator/main/v2/charts
     # ASO identity and credentials
@@ -96,7 +97,20 @@ Deploy the Platform stack like this
         --set useWorkloadIdentityAuth=true \
         --set crdPattern='resources.azure.com/*;dbforpostgresql.azure.com/*;managedidentity.azure.com/*;documentdb.azure.com/*'
 
-    # Shell operator
+First, generate a GitHub personal access token (PAT) with minimal permissions for the repository you want to access. Make sure the token has access to:
+
+- https://github.com/settings/personal-access-tokens/
+- limit to the specific repository
+- contents (read)
+- PRs (write)
+
+Install (token will be needed here)
+
+    export GITHUB_TOKEN=github_pat_XXXX
+    # You potentially need to edit the `network-glue/repo-url` as there is my repository hardcoded
+    kubectl create namespace shell-operator
+    kubectl create secret -n shell-operator generic git-token --from-literal=GIT_TOKEN="$GITHUB_TOKEN"
+    kubectl apply -k network-glue
 
 
 
@@ -128,16 +142,6 @@ Start it for example with Devpod like this
 -----
     
 
-
-
-First, generate a GitHub personal access token (PAT) with minimal permissions for the repository you want to access. Make sure the token has:
-
-- repo scope (to create PRs and push changes to the repo).
-
-Harden the token by:
-
-- Limiting the scope to a specific repository.
-- Restricting access based on IP addresses, if available.
 
 
 User managed identity

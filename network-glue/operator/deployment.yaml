@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: shell-operator
+  namespace: shell-operator
   labels:
     app: shell-operator
 spec:
@@ -15,32 +16,46 @@ spec:
         app: shell-operator
     spec:
       serviceAccountName: shell-operator
+      initContainers:
+      - name: copy-hooks
+        image: alpine:latest
+        command: [ 'sh', '-c', 'cp -rL /hooks-in/* /hooks/']
+        volumeMounts:
+        - name: hooks
+          mountPath: /hooks
+        - name: hooks-input
+          mountPath: /hooks-in
       containers:
-        - name: shell-operator
-          image: ghcr.io/flant/shell-operator:latest
+      - name: shell-operator
+        image: ghcr.io/flant/shell-operator:latest
         env:
         - name: GIT_TOKEN
           valueFrom:
             secretKeyRef:
               name: git-token
               key: GIT_TOKEN
+        - name: REPO_URL
+          valueFrom:
+            configMapKeyRef:
+              name: repo-url
+              key: repo-url
         volumeMounts:
         - name: hooks
           mountPath: /hooks
       volumes:
-      - name: hooks
+      - name: hooks-input
         configMap:
           name: shell-hooks
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: shell-hooks
-data:
-  10-create-pr.sh: |
-    #!/bin/bash
-    /path/to/create-pr.sh
-  config.yaml: |
-    configVersion: "v1"
-    onStartup:
-    - hook: 10-create-pr.sh
+          defaultMode: 0555
+          items:
+          - key: hook.sh
+            path: hook.sh
+            mode: 0555
+          - key: clone-repo.sh
+            path: bin/clone-repo.sh
+            mode: 0444
+          - key: create-pr.sh
+            path: bin/create-pr.sh
+            mode: 0444
+      - name: hooks
+        emptyDir: {}

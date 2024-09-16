@@ -1,1 +1,5 @@
 Shell-operator based simple glue code to demonstrate commit to git
+Custom Resource build with Shell Operator 
+
+Will store some network related info to another repository.
+Simulates some complex integration needs.
