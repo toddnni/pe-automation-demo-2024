@@ -16,18 +16,9 @@ spec:
         app: shell-operator
     spec:
       serviceAccountName: shell-operator
-      initContainers:
-      - name: copy-hooks
-        image: alpine:latest
-        command: [ 'sh', '-c', 'cp -rL /hooks-in/* /hooks/']
-        volumeMounts:
-        - name: hooks
-          mountPath: /hooks
-        - name: hooks-input
-          mountPath: /hooks-in
       containers:
       - name: shell-operator
-        image: ghcr.io/flant/shell-operator:latest
+        image: ghcr.io/toddnni/toddnni/pe-automation-demo-2024-shell-operator:latest
         env:
         - name: GIT_TOKEN
           valueFrom:
@@ -39,23 +30,3 @@ spec:
             configMapKeyRef:
               name: repo-url
               key: repo-url
-        volumeMounts:
-        - name: hooks
-          mountPath: /hooks
-      volumes:
-      - name: hooks-input
-        configMap:
-          name: shell-hooks
-          defaultMode: 0555
-          items:
-          - key: hook.sh
-            path: hook.sh
-            mode: 0555
-          - key: clone-repo.sh
-            path: bin/clone-repo.sh
-            mode: 0444
-          - key: create-pr.sh
-            path: bin/create-pr.sh
-            mode: 0444
-      - name: hooks
-        emptyDir: {}
