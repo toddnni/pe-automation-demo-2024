@@ -1,11 +1,11 @@
 package db
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	//"context"
+	//"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	//"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	_ "github.com/glebarez/go-sqlite" // SQLite driver
 	_ "github.com/lib/pq"             // PostgreSQL driver
 	"log"
@@ -41,25 +41,28 @@ func initPostgresDB() (DB, error) {
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
 	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASS")
 
 	var err error
-	// Create Default Azure Identity credential to retrieve the token
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not get Azure credentials: %w", err)
-	}
+	//// Create Default Azure Identity credential to retrieve the token
+	//cred, err := azidentity.NewDefaultAzureCredential(nil)
+	//if err != nil {
+	//	return nil, fmt.Errorf("could not get Azure credentials: %w", err)
+	//}
 
-	// Get an access token for PostgreSQL
-	var tokenRequestOptions policy.TokenRequestOptions = policy.TokenRequestOptions{
-		Scopes: []string{"https://ossrdbms-aad.database.windows.net/.default"},
-	}
-	token, err := cred.GetToken(context.Background(), tokenRequestOptions)
-	if err != nil {
-		return nil, fmt.Errorf("could not get access token: %w", err)
-	}
+	//// Get an access token for PostgreSQL
+	//var tokenRequestOptions policy.TokenRequestOptions = policy.TokenRequestOptions{
+	//	Scopes: []string{"https://ossrdbms-aad.database.windows.net/.default"},
+	//}
+	//token, err := cred.GetToken(context.Background(), tokenRequestOptions)
+	//if err != nil {
+	//	return nil, fmt.Errorf("could not get access token: %w", err)
+	//}
 
-	// Set up the PostgreSQL connection string with the Azure AD token
-	connStr := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=require user=%s password=%s", dbHost, dbPort, dbName, dbUser, token.Token)
+	//// Set up the PostgreSQL connection string with the Azure AD token
+	//connStr := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=require user=%s password=%s", dbHost, dbPort, dbName, dbUser, token.Token)
+
+    connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require", dbHost, dbPort, dbUser, dbPassword, dbName)
 
 	// Open connection to the database
 	db, err = sql.Open("postgres", connStr)
