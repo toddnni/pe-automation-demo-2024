@@ -1,0 +1,8 @@
+apiVersion:  example.org/v1alpha1
+kind: XAppStack
+metadata:
+  name: testapp
+  namespace: asodemo2
+spec: 
+  image: ghcr.io/toddnni/toddnni/pe-automation-demo-2024:latest
+  replicas: 1

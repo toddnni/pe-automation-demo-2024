@@ -63,6 +63,7 @@ Crossplane https://docs.crossplane.io/latest/software/install/
         --namespace crossplane-system \
         --create-namespace \
         crossplane-stable/crossplane 
+    kubectl apply -f crossplane/patch-function.yaml
 
 ASO https://azure.github.io/azure-service-operator/#installation
 
