@@ -76,6 +76,19 @@ func initPostgresDB() (DB, error) {
 	}
 
 	log.Println("Connected to the database")
+
+	createTableQuery := `
+	CREATE TABLE IF NOT EXISTS messages (
+		id SERIAL PRIMARY KEY,
+		content TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+	);`
+	_, err = db.Exec(createTableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("could not create table: %w", err)
+	}
+	log.Println("Initialized postgre database")
+
 	return &postgresDB{}, nil
 }
 
