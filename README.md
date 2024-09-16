@@ -2,6 +2,7 @@ Platform Engineering with Kubernetes Automation Demo 2024
 =============================================
 
 The idea is to demonstrate how you can use Kubernetes concepts to automate application infrastructure delivery.
+The demo will install application stack that will manage Azure resources and external Git resource with Operators.
 
 Features
 
@@ -9,7 +10,14 @@ Features
 - Crossplane https://github.com/crossplane/crossplane
 - Shell-operator https://github.com/flant/shell-operator
 
-The demo is insecure and do not use this as baseline. Public clusters etc.
+![Diagram that show the resource structure](overview.drawio.svg)
+
+
+The demo is insecure and do not use this as baseline, note
+
+- the Azure resources are exposed to public internet
+- Kubernetes deployment is not hardened
+- ASO uses full privileges in the subscription
 
 Try out
 ======
