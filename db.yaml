@@ -1,3 +1,5 @@
+# Example adapted from Microsoft MIT Licensed 
+# https://github.com/Azure-Samples/azure-service-operator-samples/blob/master/azure-votes-postgresql/manifests/postgres-votes-demo.yaml
 ---
 apiVersion: resources.azure.com/v1api20200601
 kind: ResourceGroup
@@ -22,16 +24,11 @@ spec:
     tier: Burstable
   authConfig:
     activeDirectoryAuth: "Enabled"
-    passwordAuth: "Disabled"
+    passwordAuth: "Enabled"
   administratorLogin: myadmin
-  identity:
-    type: UserAssigned
-    userAssignedIdentities:
-    - reference:
-        armId: "/subscriptions/a58e5590-66ba-46a9-952d-51c3415e0574/resourcegroups/myAKSCluster/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aso-manager"
-  #administratorLoginPassword:
-  #  name: postgres-secret
-  #  key: PASSWORD
+  administratorLoginPassword:
+    name: postgres-secret
+    key: PASSWORD
   storage:
     storageSizeGB: 32
 ---
@@ -44,20 +41,30 @@ spec:
   owner:
     name: appdb-server
   charset: utf8
-#---
-#apiVersion: dbforpostgresql.azure.com/v1api20221201
-#kind: FlexibleServersFirewallRule
-#metadata:
-#  name: appdb-allow-all
-#  namespace: asodemo
-#spec:
-#  owner:
-#    name: appdb-server
-#  # The following address range allows anybody to connect to this server.
-#  # This should only be used for demo purposes and not in production!
-#  # There are other ways to control server access which are not covered here, you can see more about it here:
-#  # https://docs.microsoft.com/azure/postgresql/flexible-server/concepts-security#network-security
-#  startIpAddress: 0.0.0.0
-#  endIpAddress: 255.255.255.255
-#---
-#
+---
+apiVersion: dbforpostgresql.azure.com/v1api20221201
+kind: FlexibleServersFirewallRule
+metadata:
+  name: appdb-allow-all
+  namespace: asodemo
+spec:
+  owner:
+    name: appdb-server
+  # The following address range allows anybody to connect to this server.
+  # This should only be used for demo purposes and not in production!
+  # There are other ways to control server access which are not covered here, you can see more about it here:
+  # https://docs.microsoft.com/azure/postgresql/flexible-server/concepts-security#network-security
+  startIpAddress: 0.0.0.0
+  endIpAddress: 255.255.255.255
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: asodemo
+stringData:
+  USERNAME: "myadmin"
+  PASSWORD: "donotusethispasswordanywhere"
+  SERVER:   "appdb-server.postgres.database.azure.com"
+  DATABASE: "appdb-server-db"
+  PORT:     "5432"

@@ -36,7 +36,8 @@ Some defaults
     export SUBSCRIPTION="$(az account show --query id --output tsv)"
     export CLUSTER_NAME="myAKSCluster"
     export RESOURCE_GROUP="myAKSCluster"
-    export ASO_IDENTITY="aso-manager"
+    export ASO_IDENTITY="aso-manager"e
+    export TENANT=$(az account show --query tenantId --output tsv)
 
 We need AKS cluster with workload identity support enabled
 
@@ -85,7 +86,6 @@ Deploy the Platform stack like this
         --issuer "${AKS_OIDC_ISSUER}" \
         --subject system:serviceaccount:azureserviceoperator-system:azureserviceoperator-default \
         --audience api://AzureADTokenExchange
-    export TENANT=$(az account show --query tenantId --output tsv)
     # install
     helm upgrade --install aso2 aso2/azure-service-operator \
         --create-namespace \
@@ -166,3 +166,11 @@ az identity federated-credential create --name myFederatedCredential \
 
 go get github.com/Azure/azure-sdk-for-go/sdk/azidentity
 
+
+
+TODO
+====
+
+- go missing from devcontainer -> clean go.sums etc
+- harden the configs
+- make postgre managed identity to work, would require some postgre commands?

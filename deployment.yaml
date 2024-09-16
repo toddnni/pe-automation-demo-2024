@@ -1,42 +1,75 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: go-app
+  namespace: asodemo
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: go-app
-  namespace: <namespace>
+  namespace: asodemo
   labels:
     app: go-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: go-app
+      app.kubernetes.io/name: go-app
   template:
     metadata:
       labels:
-        app: go-app
-      annotations:
+        app.kubernetes.io/name: go-app
+      #annotations:
         # Azure Workload Identity annotations
-        azure.workload.identity/client-id: "<clientId-of-UMI>"
+        #azure.workload.identity/client-id: "<clientId-of-UMI>"
     spec:
-      serviceAccountName: my-app-sa # This is the service account we created earlier
+      serviceAccountName: go-app
       containers:
         - name: go-app
-          image: my-go-app:latest
+          image: ghcr.io/toddnni/toddnni/pe-automation-demo-2024:latest
           ports:
             - containerPort: 8080
           env:
             - name: DB_TYPE
               value: "postgres"
             - name: DB_HOST
-              value: "<your-azure-postgresql-host>"
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: SERVER
             - name: DB_PORT
-              value: "5432"
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: PORT
             - name: DB_NAME
-              value: "<your-database-name>"
-
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: DATABASE
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: USERNAME
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: PASSWORD
 ---
 apiVersion: v1
-kind: ServiceAccount
+kind: Service
 metadata:
-  name: my-app-sa
-  namespace: <namespace>
+  name: go-app
+  namespace: asodemo
+spec:
+  selector:
+    app.kubernetes.io/name: go-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
