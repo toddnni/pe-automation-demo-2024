@@ -1,5 +1,6 @@
 # Example adapted from Microsoft MIT Licensed 
 # https://github.com/Azure-Samples/azure-service-operator-samples/blob/master/azure-votes-postgresql/manifests/postgres-votes-demo.yaml
+# https://github.com/Azure-Samples/azure-service-operator-samples/blob/master/cosmos-todo-list-mi/cosmos-sql-demo.yaml
 ---
 apiVersion: resources.azure.com/v1api20200601
 kind: ResourceGroup
@@ -8,6 +9,41 @@ metadata:
   namespace: asodemo
 spec:
   location: swedencentral
+---
+apiVersion: managedidentity.azure.com/v1api20181130
+kind: UserAssignedIdentity
+metadata:
+  name: appdb-identity
+  namespace: asodemo
+spec:
+  location: swedencentral
+  owner:
+    name: appdb-rg
+  operatorSpec:
+    configMaps:
+      principalId:
+        name: appdb-identity-settings
+        key: principalId
+      clientId:
+        name: appdb-identity-settings
+        key: clientId
+---
+apiVersion: managedidentity.azure.com/v1api20220131preview
+kind: FederatedIdentityCredential
+metadata:
+  name: appdb-fic
+  namespace: asodemo
+spec:
+  owner:
+    name: appdb-identity
+  audiences:
+    # For Workload Identity, Audiences should always be "api://AzureADTokenExchange"
+    - api://AzureADTokenExchange
+  # For Workload Identity, Issuer should be the OIDC endpoint of the cluster. For AKS this will look like
+  # https://oidc.prod-aks.azure.com/00000000-0000-0000-0000-00000000000/
+  issuer: https://swedencentral.oic.prod-aks.azure.com/07cb4dfd-f166-4ad0-969f-6f4664636c40/1f9d7621-da4f-4151-b286-d9778966a423/
+  # For Workload Identity, Subject should always be system:serviceaccount:<namespace>:<serviceaccount>
+  subject: system:serviceaccount:asodemo:go-app
 ---
 apiVersion: dbforpostgresql.azure.com/v1api20221201
 kind: FlexibleServer
