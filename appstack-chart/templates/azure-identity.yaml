@@ -1,0 +1,39 @@
+# Example adapted from Microsoft MIT Licensed 
+# https://github.com/Azure-Samples/azure-service-operator-samples/blob/master/cosmos-todo-list-mi/cosmos-sql-demo.yaml
+---
+apiVersion: managedidentity.azure.com/v1api20181130
+kind: UserAssignedIdentity
+metadata:
+  name: {{ .Release.Name }}-identity
+  labels:
+    {{- include "appstack-chart.labels" . | nindent 4 }}
+spec:
+  location: {{ .Values.azure.location }}
+  owner:
+    name: {{ .Release.Name }}-rg
+  operatorSpec:
+    configMaps:
+      principalId:
+        name: {{ .Release.Name }}-identity-settings
+        key: principalId
+      clientId:
+        name: {{ .Release.Name }}-identity-settings
+        key: clientId
+---
+apiVersion: managedidentity.azure.com/v1api20220131preview
+kind: FederatedIdentityCredential
+metadata:
+  name: {{ .Release.Name }}-fic
+  labels:
+    {{- include "appstack-chart.labels" . | nindent 4 }}
+spec:
+  owner:
+    name: {{ .Release.Name }}-identity
+  audiences:
+    # For Workload Identity, Audiences should always be "api://AzureADTokenExchange"
+    - api://AzureADTokenExchange
+  # For Workload Identity, Issuer should be the OIDC endpoint of the cluster. For AKS this will look like
+  # https://oidc.prod-aks.azure.com/00000000-0000-0000-0000-00000000000/
+  issuer: {{ .Values.azure.oidcIssuerUrl }}
+  # For Workload Identity, Subject should always be system:serviceaccount:<namespace>:<serviceaccount>
+  subject: system:serviceaccount:{{ .Release.Namespace }}:{{ include "appstack-chart.serviceAccountName" . }}

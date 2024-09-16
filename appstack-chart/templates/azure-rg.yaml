@@ -1,0 +1,8 @@
+apiVersion: resources.azure.com/v1api20200601
+kind: ResourceGroup
+metadata:
+  name: {{ .Release.Name }}-rg
+  labels:
+    {{- include "appstack-chart.labels" . | nindent 4 }}
+spec:
+  location: {{ .Values.azure.location }}

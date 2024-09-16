@@ -1,0 +1,12 @@
+apiVersion: example.com/v1
+kind: NetworkGlue
+metadata:
+  name: {{ .Release.Name }}-outbound
+  labels:
+    {{- include "appstack-chart.labels" . | nindent 4 }}
+spec:
+  source:
+    networkCIDR: {{ .Values.network.sourceCIDR }}
+  target:
+    networkCIDR: {{ .Values.network.targetCIDR }}
+    port: "{{ .Values.network.targetPort }}"

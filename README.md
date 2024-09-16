@@ -7,11 +7,9 @@ The demo will install application stack that will manage Azure resources and ext
 Features
 
 - ASO, Azure Service Operator https://github.com/Azure/azure-service-operator
-- Crossplane https://github.com/crossplane/crossplane
 - Shell-operator https://github.com/flant/shell-operator
 
 ![Diagram that show the resource structure](overview.drawio.svg)
-
 
 The demo is insecure and do not use this as baseline, note
 
@@ -36,7 +34,7 @@ Some defaults
     export SUBSCRIPTION="$(az account show --query id --output tsv)"
     export CLUSTER_NAME="myAKSCluster"
     export RESOURCE_GROUP="myAKSCluster"
-    export ASO_IDENTITY="aso-manager"e
+    export ASO_IDENTITY="aso-manager"
     export TENANT=$(az account show --query tenantId --output tsv)
 
 We need AKS cluster with workload identity support enabled
@@ -54,16 +52,7 @@ We need AKS cluster with workload identity support enabled
         --generate-ssh-keys
     az aks get-credentials --resource-group "${RESOURCE_GROUP}" --name "${CLUSTER_NAME}"
 
-Deploy the Platform stack like this
-
-Crossplane https://docs.crossplane.io/latest/software/install/
-
-    helm repo add crossplane-stable https://charts.crossplane.io/stable
-    helm install crossplane \
-        --namespace crossplane-system \
-        --create-namespace \
-        crossplane-stable/crossplane 
-    kubectl apply -f crossplane/patch-function.yaml
+Deploy the Platform stack with the following steps.
 
 ASO https://azure.github.io/azure-service-operator/#installation
 
@@ -102,16 +91,18 @@ ASO https://azure.github.io/azure-service-operator/#installation
         --set azureTenantID=$TENANT \
         --set azureClientID=$USER_ASSIGNED_CLIENT_ID \
         --set useWorkloadIdentityAuth=true \
-        --set crdPattern='resources.azure.com/*;dbforpostgresql.azure.com/*;managedidentity.azure.com/*;documentdb.azure.com/*'
+        --set crdPattern='resources.azure.com/*;dbforpostgresql.azure.com/*;managedidentity.azure.com/*'
 
-First, generate a GitHub personal access token (PAT) with minimal permissions for the repository you want to access. Make sure the token has access to:
+Shell operator.
+
+Generate a GitHub personal access token (PAT) with minimal permissions for the repository you want to access. Make sure the token has access to:
 
 - https://github.com/settings/personal-access-tokens/
 - limit to the specific repository
 - contents (write, needs for branches)
 - PRs (write)
 
-Install (token will be needed here)
+Install, replace the token here
 
     export GITHUB_TOKEN=github_pat_XXXX
     # You potentially need to edit the `network-glue/repo-url` as there is my repository hardcoded
@@ -122,15 +113,39 @@ Install (token will be needed here)
 Demo
 ----
 
-Needs a cluster and resources in the prerequisites
+Needs a cluster and resources in the prerequisites, see above.
 
+Initialize the application (see app.sh).
+Start of the database instance takes about five minutes.
 
+    APP=demo
+    kubectl create ns "$APP"
+    kubectl create secret -n "$APP" generic db-secret --from-literal=PASSWORD="$(openssl rand -base64 12)"
 
+    cat > application-"$APP".values <<EOF
+    image:
+      repository: ghcr.io/toddnni/toddnni/pe-automation-demo-2024
+      tag: latest
+    azure:
+      location: "$LOCATION"
+      oidcIssuerUrl: "$AKS_OIDC_ISSUER"
+      postgrePasswordSecret: "db-secret"
+    network:
+      targetCIDR: 192.168.0.3/24
+    EOF
 
-Adapt the example and deploy the application like this
+And deploy
+
+    helm upgrade --install -n "$APP" --values application-"$APP".values "$APP" appstack-chart/
+
+Monitor the Azure resources.
 
 Cleanup
 ------
+
+    helm uninstall -n "$APP" "$APP"
+
+Wait until all the managed resources are deleted
 
     az aks delete --name "${CLUSTER_NAME}" --resource-group "${RESOURCE_GROUP}" --yes
     az group delete --resource-group "${RESOURCE_GROUP}" --yes
@@ -144,7 +159,7 @@ Start it for example with Devpod like this
 
     devpod up https://github.com/toddnni/pe-automation-demo-2024.git
 
-Future refrence
+Future reference
 =====
 
 User managed identity for postgres
@@ -155,8 +170,10 @@ User managed identity for postgres
 TODO
 ====
 
+- demo hard to run as env variables here and there and need to be initialized
 - go missing from devcontainer -> clean go.sums etc
 - harden the configs
+- use operator instead of helm chart
 - make postgre managed identity to work, would require some postgre commands?
 - network-glue do not create PR if no changes
 - network-glue save status to crd
