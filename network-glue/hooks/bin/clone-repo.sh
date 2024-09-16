@@ -19,7 +19,7 @@ fi
 # Clone the repository using the GitHub token
 echo "Cloning the repository..."
 rm -rf "$REPO_DIR"
-git clone https://"${GIT_TOKEN}":x-oauth-basic@"$REPO_URL" "$REPO_DIR"
+git clone https://"${GIT_TOKEN}":x-oauth-basic@"${REPO_URL#https://}" "$REPO_DIR"
 cd "$REPO_DIR"
 
 # Create a new branch for the changes

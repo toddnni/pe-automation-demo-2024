@@ -56,7 +56,13 @@ We need AKS cluster with workload identity support enabled
 
 Deploy the Platform stack like this
 
-Crossplane
+Crossplane https://docs.crossplane.io/latest/software/install/
+
+    helm repo add crossplane-stable https://charts.crossplane.io/stable
+    helm install crossplane \
+        --namespace crossplane-system \
+        --create-namespace \
+        crossplane-stable/crossplane 
 
 ASO https://azure.github.io/azure-service-operator/#installation
 
@@ -101,7 +107,7 @@ First, generate a GitHub personal access token (PAT) with minimal permissions fo
 
 - https://github.com/settings/personal-access-tokens/
 - limit to the specific repository
-- contents (read)
+- contents (write, needs for branches)
 - PRs (write)
 
 Install (token will be needed here)
@@ -111,8 +117,6 @@ Install (token will be needed here)
     kubectl create namespace shell-operator
     kubectl create secret -n shell-operator generic git-token --from-literal=GIT_TOKEN="$GITHUB_TOKEN"
     kubectl apply -k network-glue
-
-
 
 Demo
 ----
@@ -137,40 +141,15 @@ There is Devcontainer that contain all the necessary tooling for the demo.
 
 Start it for example with Devpod like this
 
+    devpod up https://github.com/toddnni/pe-automation-demo-2024.git
 
+Future refrence
+=====
 
------
-    
+User managed identity for postgres
 
-
-
-User managed identity
-
-az identity create --name myUserManagedIdentity --resource-group myResourceGroup --location eastus
-
-az role assignment create --assignee <clientId-of-UMI> \
-  --role "Azure PostgreSQL Contributor" \
-  --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.DBforPostgreSQL/servers/<server-name>
-
-Pstgre need to use AAD
-
-CREATE ROLE "<clientId-of-UMI>" WITH LOGIN INHERIT;
-GRANT ALL PRIVILEGES ON DATABASE <your_database> TO "<clientId-of-UMI>";
-
-
-Federation of sa
-
-az identity federated-credential create --name myFederatedCredential \
-  --identity-name myUserManagedIdentity --resource-group myResourceGroup \
-  --issuer https://kubernetes.default.svc.cluster.local \
-  --subject system:serviceaccount:<namespace>:my-app-sa \
-  --audience sts.windows.net
-
-
-
-go get github.com/Azure/azure-sdk-for-go/sdk/azidentity
-
-
+    CREATE ROLE "<clientId-of-UMI>" WITH LOGIN INHERIT;
+    GRANT ALL PRIVILEGES ON DATABASE <your_database> TO "<clientId-of-UMI>";
 
 TODO
 ====
@@ -178,3 +157,5 @@ TODO
 - go missing from devcontainer -> clean go.sums etc
 - harden the configs
 - make postgre managed identity to work, would require some postgre commands?
+- network-glue do not create PR if no changes
+- network-glue save status to crd
