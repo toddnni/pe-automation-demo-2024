@@ -62,7 +62,7 @@ func initPostgresDB() (DB, error) {
 	//// Set up the PostgreSQL connection string with the Azure AD token
 	//connStr := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=require user=%s password=%s", dbHost, dbPort, dbName, dbUser, token.Token)
 
-    connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require", dbHost, dbPort, dbUser, dbPassword, dbName)
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require", dbHost, dbPort, dbUser, dbPassword, dbName)
 
 	// Open connection to the database
 	db, err = sql.Open("postgres", connStr)

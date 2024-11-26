@@ -171,7 +171,6 @@ TODO
 ====
 
 - demo hard to run as env variables here and there and need to be initialized
-- go missing from devcontainer -> clean go.sums etc
 - harden the configs
 - use operator instead of helm chart
 - make postgre managed identity to work, would require some postgre commands?
