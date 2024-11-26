@@ -1,0 +1,61 @@
+# init or load environment
+# clean values
+# clean ns
+# clean prs
+
+## 12:00
+sh app.sh pe-demo
+
+# go through this repo contents
+
+k get userassignedidentities -A
+k get flexibleservers -A
+
+# check identities in the portal
+# check postgres in the portal
+
+k get po -n pe-demo
+k logs -n pe-demo deployments/pe-demo-appstack-chart
+
+# check application-pe-demo.values in editor
+
+# check aks custom resources
+k get ng -A
+
+# check and merge pr
+# go https://github.com/toddnni/pe-automation-demo-2024-repo
+
+## 17:00
+# is it ready now
+k get userassignedidentities -A
+k get flexibleservers -A
+
+# check the app result
+k get po -n pe-demo
+k get svc -n pe-demo
+
+# more
+sh app.sh pe-demo2
+
+k get userassignedidentities -A
+k get flexibleservers -A
+
+## edit application-pe-demo.values network part
+APP=pe-demo
+helm upgrade -n "$APP" --values application-"$APP".values "$APP" appstach-chart/
+
+# check and merge pr
+# go https://github.com/toddnni/pe-automation-demo-2024-repo
+
+## clean
+helm uninstall -n pe-demo pe-demo
+helm uninstall -n pe-demo2 pe-demo2
+
+k get userassignedidentities -A
+k get flexibleservers -A
+# check the portal also
+
+# check and merge pr
+# go https://github.com/toddnni/pe-automation-demo-2024-repo
+
+## 25:00

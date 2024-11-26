@@ -8,8 +8,8 @@ if [ $# -ne 1 ]; then
 fi
 
 APP="$1"
-kubectl create ns "$APP"
-kubectl create secret -n "$APP" generic db-secret --from-literal=PASSWORD="$(openssl rand -base64 12)"
+kubectl create ns "$APP" || true
+kubectl create secret -n "$APP" generic db-secret --from-literal=PASSWORD="$(openssl rand -base64 12)" || true
 
 cat > application-"$APP".values <<EOF
 image:
@@ -19,6 +19,8 @@ azure:
   location: "$LOCATION"
   oidcIssuerUrl: "$AKS_OIDC_ISSUER"
   postgrePasswordSecret: "db-secret"
+network:
+  targetCIDR: 192.168.0.3/24
 EOF
 
 helm upgrade --install -n "$APP" --values application-"$APP".values "$APP" appstack-chart/
